@@ -65,7 +65,7 @@ jobs:
     env:
       HELIOS_HOST: helios.cs.ifmo.ru
       HELIOS_PORT: 2222
-      HELIOS_USER: s506807
+      HELIOS_USER: ${{ secrets.HELIOS_USER }}
       HELIOS_PATH: public_html/ssg/
     steps:
       - uses: actions/download-artifact@v4
