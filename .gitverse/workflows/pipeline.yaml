@@ -1,0 +1,68 @@
+name: pipeline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-cloud-runner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+      - run: pip install -r requirements.txt
+      - run: codespell docs README.md mkdocs.yml
+      - run: mkdocs build --strict
+
+  build:
+    needs: lint
+    runs-on: ubuntu-cloud-runner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+      - run: |
+          start=$(date +%s)
+          pip install -r requirements.txt
+          echo "cache hit: ${{ steps.cache.outputs.cache-hit == 'true' }}, pip install took $(($(date +%s) - start))s"
+      - run: mkdocs build --strict
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site
+          retention-days: 1
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-cloud-runner
+    env:
+      HELIOS_HOST: helios.cs.ifmo.ru
+      HELIOS_PORT: 2222
+      HELIOS_USER: ${{ secrets.HELIOS_USER }}
+      HELIOS_PATH: public_html/ssg/
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+      - run: sudo apt-get install -y sshpass rsync
+      - env:
+          SSHPASS: ${{ secrets.HELIOS_PASSWORD }}
+        run: |
+          sshpass -e rsync -az --delete \
+            -e "ssh -p $HELIOS_PORT -o StrictHostKeyChecking=no" \
+            site/ "$HELIOS_USER@$HELIOS_HOST:$HELIOS_PATH"

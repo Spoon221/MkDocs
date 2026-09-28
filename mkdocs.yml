@@ -1,0 +1,32 @@
+site_name: Static Site Generator Lab
+site_url: https://spoon221.github.io/SSG/
+site_author: Преображенский Георгий Сергеевич, Симаков Евгений Сергеевич
+copyright: © 2026 Преображенский Георгий Сергеевич, Симаков Евгений Сергеевич
+
+validation:
+  links:
+    absolute_links: warn
+    unrecognized_links: warn
+    anchors: warn
+
+theme:
+  name: material
+  language: ru
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Главная: index.md
+  - CI/CD:
+      - GitHub Actions: cicd/github-actions.md
+      - Helios: cicd/helios.md
+      - P1. GitVerse: cicd/gitverse.md
+  - Лицензия: license.md

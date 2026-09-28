@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#3f51b5"/>
+  <rect x="48" y="36" width="92" height="116" rx="6" fill="#c5cae9"/>
+  <rect x="60" y="48" width="92" height="116" rx="6" fill="#fff"/>
+  <rect x="72" y="64" width="60" height="6" rx="3" fill="#3f51b5"/>
+  <rect x="72" y="80" width="68" height="4" rx="2" fill="#9fa8da"/>
+  <rect x="72" y="92" width="52" height="4" rx="2" fill="#9fa8da"/>
+  <rect x="72" y="104" width="64" height="4" rx="2" fill="#9fa8da"/>
+  <rect x="72" y="116" width="44" height="4" rx="2" fill="#9fa8da"/>
+  <text x="106" y="150" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="#00acc1">SSG</text>
+</svg>

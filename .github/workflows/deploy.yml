@@ -1,0 +1,81 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: mkdocs build --strict
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: |
+          start=$(date +%s)
+          pip install -r requirements.txt
+          echo "pip install took $(($(date +%s) - start))s"
+      - run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy-pages:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-helios:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      HELIOS_HOST: helios.cs.ifmo.ru
+      HELIOS_PORT: 2222
+      HELIOS_USER: s506807
+      HELIOS_PATH: public_html/ssg/
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+      - run: mkdir site && tar -xf artifact.tar -C site
+      - run: sudo apt-get install -y sshpass
+      - env:
+          SSHPASS: ${{ secrets.HELIOS_PASSWORD }}
+        run: |
+          sshpass -e rsync -az --delete \
+            -e "ssh -p $HELIOS_PORT -o StrictHostKeyChecking=no" \
+            site/ "$HELIOS_USER@$HELIOS_HOST:$HELIOS_PATH"
